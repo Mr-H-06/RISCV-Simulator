@@ -1,8 +1,8 @@
-//
-// Created by hejia on 25-7-25.
-//
-
 #ifndef ALU_H
 #define ALU_H
-class ALU{};
+#include "rs.h"
+class ALU {
+private:
+
+};
 #endif //ALU_H

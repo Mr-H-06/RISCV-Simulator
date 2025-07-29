@@ -28,8 +28,8 @@ public:
           location += hex[line[i]];
         }
       } else {
-        size_t num = (line.size() + 1) / 3;
-        for (size_t i = 0; i < num; ++i) {
+        uint32_t num = (line.size() + 1) / 3;
+        for (uint32_t i = 0; i < num; ++i) {
           uint32_t code = (hex[line[i * 3]] << 4) + hex[line[i * 3 + 1]];
           ins[location] = code;
           ++location;
@@ -54,8 +54,8 @@ public:
           location += hex[line[i]];
         }
       } else {
-        size_t num = (line.size() + 1) / 3;
-        for (size_t i = 0; i < num; ++i) {
+        uint32_t num = (line.size() + 1) / 3;
+        for (uint32_t i = 0; i < num; ++i) {
           uint32_t code = (hex[line[i * 3]] << 4) + hex[line[i * 3 + 1]];
           ins[location] = code;
           ++location;
@@ -69,6 +69,7 @@ public:
   }
 private:
   std::unordered_map<uint32_t, uint32_t> ins;
+  uint32_t mem[32];
   uint32_t reg[32];
 };
 #endif //DECODE_H
