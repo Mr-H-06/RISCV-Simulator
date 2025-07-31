@@ -31,7 +31,7 @@ public:
         uint32_t num = (line.size() + 1) / 3;
         for (uint32_t i = 0; i < num; ++i) {
           uint32_t code = (hex[line[i * 3]] << 4) + hex[line[i * 3 + 1]];
-          ins[location] = code;
+          mem[location] = code;
           ++location;
         }
       }
@@ -57,19 +57,22 @@ public:
         uint32_t num = (line.size() + 1) / 3;
         for (uint32_t i = 0; i < num; ++i) {
           uint32_t code = (hex[line[i * 3]] << 4) + hex[line[i * 3 + 1]];
-          ins[location] = code;
+          mem[location] = code;
           ++location;
         }
       }
     }
   }
 
-  uint32_t getIns(uint32_t location) {
-    return ins[location];
+  uint32_t get(uint32_t location) {
+    return mem[location];
+  }
+
+  void write(uint32_t location, uint32_t info) {
+    mem[location] = info;
   }
 private:
-  std::unordered_map<uint32_t, uint32_t> ins;
-  uint32_t mem[32];
-  uint32_t reg[32];
+  std::unordered_map<uint32_t, uint8_t> mem;
+  //uint32_t mem[32];
 };
 #endif //DECODE_H

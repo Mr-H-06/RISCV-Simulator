@@ -1,28 +1,23 @@
 #ifndef RS_H
 #define RS_H
 #include "rob.h"
+#include "rf.h"
+#include "alu.h"
 
-template<uint32_t Num>
+
 class ReservationStation {
 public:
-  struct RSEntry {
-    bool busy;
-    Opcode opcode;
-    int32_t vj;
-    int32_t vk;
-    uint32_t qj;
-    uint32_t qk;
-    uint32_t dest;
-    uint32_t A;
-  };
   ReservationStation() = default;
 
   void push(uint32_t &dest, DecodedIns &decoded_ins) {
     queue[rear].busy = false;
     queue[rear].opcode = decoded_ins.opcode;
+    queue[rear].qj = -1;
+    queue[rear].qk = -1;
     if (decoded_ins.opcode_type == R) {
       queue[rear].vj = decoded_ins.rs1;
-      queue[rear].vk = decoded_ins.rs2;
+      queue[rear].qj =
+          queue[rear].vk = decoded_ins.rs2;
     } else if (decoded_ins.opcode_type == I2) {
       queue[rear].vj = decoded_ins.rs1;
       queue[rear].vk = decoded_ins.imm;
@@ -32,6 +27,10 @@ public:
     }
     queue[rear].dest = dest;
     ++rear;
+  }
+
+  ReservationStation run(RSReturn &rsret, RoBReturn &robret) {
+
   }
 
   RSEntry get() {
@@ -53,9 +52,11 @@ public:
     ++head;
   }
 
-private:
   RSEntry queue[Num];
   uint32_t head;
   uint32_t rear;
+
+  ALU alu;
+  DecodedIns alu_in;
 };
 #endif //RS_H

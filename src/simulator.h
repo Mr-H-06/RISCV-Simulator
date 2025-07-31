@@ -1,29 +1,29 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
+#include "returnlib.h"
 #include "memory.h"
 #include "rs.h"
-#include "alu.h"
 #include "rob.h"
-#include "rf.h"
 #include "lsb.h"
 
 class Simulator {
 public:
-  Simulator(std::string &filename) : memory(filename), pc(0), fetchIns(0) {
+  Simulator(std::string &filename) : memory(filename), pc(0), pc_next(0), rs() {
   }
 
-  Simulator() : memory(), pc(0), fetchIns(0) {
+  Simulator() : memory(), pc(0), pc_next(0), rs() {
   }
 
   void run() {
     uint32_t cycle;
-    for (cycle = 0; ; cycle++) {
+    for (cycle = 0; cycle < 2e9; cycle++) {
+      transfer();
       fetch();
-      issue();
-      execute();
-      write(); //including broadcast
-      commit();
-      if (pc) {
+      rob_next = rob.run(decoded_entry, rsret, lsbret, robret);
+      rs_next = rs.run(rsret_next, robret);
+      lsb_next = lsb.run(memory, lsbret_next, rob);
+      if (robret_next.exit) {
+        std::cout << robret_next.exit_num << '\n';
         break;
       }
     }
@@ -31,19 +31,39 @@ public:
   }
 
 private:
-  void fetch() {
-    fetchIns = memory.getIns(pc);
-    fetchIns += memory.getIns(pc + 1) << 8;
-    fetchIns += memory.getIns(pc + 2) << 16;
-    fetchIns += memory.getIns(pc + 3) << 24;
-    decode();
+  void transfer() {
+    pc = pc_next;
+    decoded_entry = decoded_entry_next;
+
+    rs = rs_next;
+    rsret = rsret_next;
+    lsb = lsb_next;
+    lsbret = lsbret_next;
   }
 
-  void decode() {
-    decoded_ins.clear();
+  void fetch() {
+    // in: pc, out: decoded_entry
+    uint32_t fetchIns;
+    if (rob.full()) {
+      DecodedIns ret = DecodedIns();
+      ret.opcode = INVALID;
+      decoded_entry_next = ret;
+      return;
+    }
+    pc_next = pc + 4; //默认 + 4
+    fetchIns = memory.get(pc);
+    fetchIns += memory.get(pc + 1) << 8;
+    fetchIns += memory.get(pc + 2) << 16;
+    fetchIns += memory.get(pc + 3) << 24;
+    decoded_entry_next = decode(fetchIns);
+  }
+
+  DecodedIns decode(uint32_t fetchIns) {
+    DecodedIns decoded_ins = DecodedIns();
+    decoded_ins.pc = pc;
     if (fetchIns == 0x0ff00513) {
       decoded_ins.opcode = EXIT;
-      return;
+      return decoded_ins;
     }
     uint32_t type = fetchIns & 0b1111111;
     fetchIns >>= 7;
@@ -188,7 +208,7 @@ private:
         } else {
           decoded_ins.opcode = INVALID;
         }
-        return;
+        return decoded_ins;
       } else if (type == 0b101) {
         decoded_ins.rs2 = (fetchIns & 0b11111);
         fetchIns >>= 5;
@@ -199,7 +219,7 @@ private:
         } else {
           decoded_ins.opcode = INVALID;
         }
-        return;
+        return decoded_ins;
       } else {
         decoded_ins.opcode = INVALID;
       }
@@ -247,78 +267,68 @@ private:
     } else {
       decoded_ins.opcode = INVALID;
     }
+    return decoded_ins;
   }
 
-  void issue() {
-    /*if (decoded_ins.opcode == LUI) {
-    } else if (decoded_ins.opcode == AUIIPC) {
-    } else if (decoded_ins.opcode == JAL) {
-    } else if (decoded_ins.opcode == JALR) {
-    } else if (decoded_ins.opcode == BEQ) {
-    } else if (decoded_ins.opcode == BNE) {
-    } else if (decoded_ins.opcode == BLT) {
-    } else if (decoded_ins.opcode == BGE) {
-    } else if (decoded_ins.opcode == BLTU) {
-    } else if (decoded_ins.opcode == BGEU) {
-    } else if (decoded_ins.opcode == LB) {
-    } else if (decoded_ins.opcode == LH) {
-    } else if (decoded_ins.opcode == LW) {
-    } else if (decoded_ins.opcode == LBU) {
-    } else if (decoded_ins.opcode == LHU) {
-    } else if (decoded_ins.opcode == SB) {
-    } else if (decoded_ins.opcode == SH) {
-    } else if (decoded_ins.opcode == SW) {
-    } else if (decoded_ins.opcode == ADDI) {
-    } else if (decoded_ins.opcode == SLTI) {
-    } else if (decoded_ins.opcode == SLTIU) {
-    } else if (decoded_ins.opcode == XORI) {
-    } else if (decoded_ins.opcode == ORI) {
-    } else if (decoded_ins.opcode == ANDI) {
-    } else if (decoded_ins.opcode == SLLI) {
-    } else if (decoded_ins.opcode == SRLI) {
-    } else if (decoded_ins.opcode == SRAI) {
-    } else if (decoded_ins.opcode == ADD) {
-    } else if (decoded_ins.opcode == SUB) {
-    } else if (decoded_ins.opcode == SLL) {
-    } else if (decoded_ins.opcode == SLT) {
-    } else if (decoded_ins.opcode == SLTU) {
-    } else if (decoded_ins.opcode == XOR) {
-    } else if (decoded_ins.opcode == SRL) {
-    } else if (decoded_ins.opcode == SRA) {
-    } else if (decoded_ins.opcode == OR) {
-    } else if (decoded_ins.opcode == AND) {
-    }*/
-    if (decoded_ins.opcode != INVALID) {
-      if (decoded_ins.opcode_type == I1 || decoded_ins.opcode_type == S) {
-        uint32_t rob_id = rob.push(decoded_ins);
-        lsb.push(rob_id, decoded_ins);
-      } else {
-        uint32_t rob_id = rob.push(decoded_ins);
-        rs.push(rob_id, decoded_ins);
-      }
-    }
-
-  }
-
-  void execute() {
-
-  }
-
-  void write() {
-  }
-
-  void commit() {
-  }
-
-  ALU alu;
-  ReorderBuffer<6> rob;
-  DecodedIns decoded_ins;
-  ReservationStation<5> rs;
-  RegisterFile rf;
-  LoadStoreBuffer<5> lsb;
   Memory memory; //包括指令和内存
   uint32_t pc;
-  uint32_t fetchIns;
+  uint32_t pc_next;
+  DecodedIns decoded_entry;
+  DecodedIns decoded_entry_next;
+
+  ReorderBuffer rob;
+  ReorderBuffer rob_next;
+  RoBReturn robret;
+  RoBReturn robret_next;
+
+  ReservationStation rs;
+  ReservationStation rs_next;
+  RSReturn rsret;
+  RSReturn rsret_next;
+
+  LoadStoreBuffer lsb;
+  LoadStoreBuffer lsb_next;
+  LSBReturn lsbret;
+  LSBReturn lsbret_next;
 };
 
 #endif //SIMULATOR_H
+
+/*if (decoded_ins.opcode == LUI) {
+} else if (decoded_ins.opcode == AUIIPC) {
+} else if (decoded_ins.opcode == JAL) {
+} else if (decoded_ins.opcode == JALR) {
+} else if (decoded_ins.opcode == BEQ) {
+} else if (decoded_ins.opcode == BNE) {
+} else if (decoded_ins.opcode == BLT) {
+} else if (decoded_ins.opcode == BGE) {
+} else if (decoded_ins.opcode == BLTU) {
+} else if (decoded_ins.opcode == BGEU) {
+} else if (decoded_ins.opcode == LB) {
+} else if (decoded_ins.opcode == LH) {
+} else if (decoded_ins.opcode == LW) {
+} else if (decoded_ins.opcode == LBU) {
+} else if (decoded_ins.opcode == LHU) {
+} else if (decoded_ins.opcode == SB) {
+} else if (decoded_ins.opcode == SH) {
+} else if (decoded_ins.opcode == SW) {
+} else if (decoded_ins.opcode == ADDI) {
+} else if (decoded_ins.opcode == SLTI) {
+} else if (decoded_ins.opcode == SLTIU) {
+} else if (decoded_ins.opcode == XORI) {
+} else if (decoded_ins.opcode == ORI) {
+} else if (decoded_ins.opcode == ANDI) {
+} else if (decoded_ins.opcode == SLLI) {
+} else if (decoded_ins.opcode == SRLI) {
+} else if (decoded_ins.opcode == SRAI) {
+} else if (decoded_ins.opcode == ADD) {
+} else if (decoded_ins.opcode == SUB) {
+} else if (decoded_ins.opcode == SLL) {
+} else if (decoded_ins.opcode == SLT) {
+} else if (decoded_ins.opcode == SLTU) {
+} else if (decoded_ins.opcode == XOR) {
+} else if (decoded_ins.opcode == SRL) {
+} else if (decoded_ins.opcode == SRA) {
+} else if (decoded_ins.opcode == OR) {
+} else if (decoded_ins.opcode == AND) {
+}*/
