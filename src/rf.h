@@ -9,6 +9,7 @@ public:
       rat[i] = -1;
     }
   }
+  /*
   uint32_t read(uint32_t idx) {
     return reg[idx];
   }
@@ -16,6 +17,7 @@ public:
   void write(uint32_t idx, uint32_t value) {
     reg[idx] = value;
   }
+  */
 
   uint32_t reg[32];
   int32_t rat[32];

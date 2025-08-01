@@ -1,6 +1,7 @@
 #ifndef LSB_H
 #define LSB_H
 #include "returnlib.h"
+#include "rob.h"
 #include "memory.h"
 
 class LoadStoreBuffer {
@@ -15,8 +16,8 @@ public:
   void push(uint32_t dest, DecodedIns &decoded_ins, ReorderBuffer &rob) {
     queue[size].opcode = decoded_ins.opcode;
     queue[size].rob_id = dest;
-    queue[size].rs1val = rob.getreg(decoded_ins.rs1);
-    queue[size].rs2val = rob.getreg(decoded_ins.rs2);
+    queue[size].rs1val = rob.rob[dest].rs1val;
+    queue[size].rs2val = rob.rob[dest].rs2val;
     queue[size].imm = decoded_ins.imm;
     queue[size].addr = decoded_ins.rs1 + decoded_ins.imm;
     if (decoded_ins.opcode_type == I1) {
@@ -35,7 +36,7 @@ public:
     if (!next.full()) {
       for (uint32_t i = rob.head; i != rob.rear; i = (i + 1) % Num) {
         if (rob.rob[i].instruction.opcode_type == I1 || rob.rob[i].instruction.opcode_type == R) {
-          if (rob.rob[i].ready && rob.rob[i].state == RoBEntry::Issued) {
+          if (rob.rob[i].prepared && rob.rob[i].state == RoBEntry::Issued) {
             next.push(i, rob.rob[i].instruction, rob);
             ret.add = true;
             ret.add_id = i;
@@ -83,14 +84,14 @@ public:
         ret.rob_id = next.queue[working_idx].rob_id;
         ret.data = next.queue[working_idx].data;
         ret.is_load = next.queue[working_idx].is_load;
-        for (uint32_t k = working_idx; k < size - 1; ++k) {
+        for (int32_t k = working_idx; k < size - 1; ++k) {
           next.queue[k] = next.queue[k + 1];
         }
         working = false;
         --size;
       }
     } else {
-      uint32_t id = next.queue[0].rob_id;
+      //uint32_t id = next.queue[0].rob_id;
       if (next.queue[0].is_load) {
         //if (rob.regDependencyCheck(rob.rob[id].instruction.rd, id) && rob.regDependencyCheck(next.queue[0].rs1, id)) {
         working_idx = 0;
@@ -132,7 +133,7 @@ private:
   };
 
   LSBEntry queue[Num];
-  uint32_t size;
+  int32_t size;
 
   bool working;
   uint32_t working_idx;

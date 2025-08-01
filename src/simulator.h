@@ -8,20 +8,29 @@
 
 class Simulator {
 public:
-  Simulator(std::string &filename) : memory(filename), pc(0), pc_next(0), rs() {
+  Simulator(std::string &filename) : memory(filename), pc(0), pc_next(0), decoded_entry(), decoded_entry_next(), rob(),
+                                     rob_next(), robret(), robret_next(), rs(), rs_next(), rsret(), rsret_next(), lsb(),
+                                     lsb_next(), lsbret(), lsbret_next() {
   }
 
-  Simulator() : memory(), pc(0), pc_next(0), rs() {
+  Simulator() : memory(), pc(0), pc_next(0), decoded_entry(), decoded_entry_next(), rob(),
+                                     rob_next(), robret(), robret_next(), rs(), rs_next(), rsret(), rsret_next(), lsb(),
+                                     lsb_next(), lsbret(), lsbret_next() {
   }
 
   void run() {
     uint32_t cycle;
-    for (cycle = 0; cycle < 2e9; cycle++) {
+    for (cycle = 0; cycle < 1e10; cycle++) {
       transfer();
       fetch();
       rob_next = rob.run(decoded_entry, rsret, lsbret, robret);
-      rs_next = rs.run(rsret_next, robret);
+      rs_next = rs.run(rsret_next, rob);
       lsb_next = lsb.run(memory, lsbret_next, rob);
+      if (robret.pc_jump) {
+        pc_next = robret.pc;
+      } else {
+        pc_next = pc + 4;
+      }
       if (robret_next.exit) {
         std::cout << robret_next.exit_num << '\n';
         break;
@@ -47,10 +56,10 @@ private:
     if (rob.full()) {
       DecodedIns ret = DecodedIns();
       ret.opcode = INVALID;
+      ret.opcode_type = INV;
       decoded_entry_next = ret;
       return;
     }
-    pc_next = pc + 4; //默认 + 4
     fetchIns = memory.get(pc);
     fetchIns += memory.get(pc + 1) << 8;
     fetchIns += memory.get(pc + 2) << 16;
@@ -63,6 +72,7 @@ private:
     decoded_ins.pc = pc;
     if (fetchIns == 0x0ff00513) {
       decoded_ins.opcode = EXIT;
+      decoded_ins.opcode_type = EX;
       return decoded_ins;
     }
     uint32_t type = fetchIns & 0b1111111;
@@ -75,7 +85,7 @@ private:
       decoded_ins.imm = fetchIns << 12;
     } else if (type == 0b0010111) {
       decoded_ins.opcode_type = U;
-      decoded_ins.opcode = AUIIPC;
+      decoded_ins.opcode = AUIPC;
       decoded_ins.rd = (fetchIns & 0b11111);
       fetchIns >>= 5;
       decoded_ins.imm = fetchIns << 12;
