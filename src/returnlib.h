@@ -1,7 +1,7 @@
 #ifndef RETURNLIB_H
 #define RETURNLIB_H
 #include <cstdint>
-constexpr uint32_t Num = 5;
+constexpr int32_t Num = 5;
 //  fetch
 enum Opcode : uint8_t {
   LUI, AUIPC, JAL, JALR, BEQ, BNE, BLT, BGE, BLTU, BGEU,
@@ -64,6 +64,8 @@ struct RoBEntry {
   uint32_t pc;
   uint32_t rs1val;
   uint32_t rs2val;
+  bool jump;
+  uint32_t jump_pc;
 };
 
 //  ALU
@@ -119,7 +121,7 @@ struct RSReturn {
 struct LSBReturn {
   LSBReturn() = default;
   bool pop;
-  bool is_load;
+  //bool is_load;
   uint32_t rob_id;
   uint32_t data;
 

@@ -9,12 +9,12 @@
 class Simulator {
 public:
   Simulator(std::string &filename) : memory(filename), pc(0), pc_next(0), decoded_entry(), decoded_entry_next(), rob(),
-                                     rob_next(), robret(), robret_next(), rs(), rs_next(), rsret(), rsret_next(), lsb(),
+                                     rob_next(), robret(), rs(), rs_next(), rsret(), rsret_next(), lsb(),
                                      lsb_next(), lsbret(), lsbret_next() {
   }
 
   Simulator() : memory(), pc(0), pc_next(0), decoded_entry(), decoded_entry_next(), rob(),
-                                     rob_next(), robret(), robret_next(), rs(), rs_next(), rsret(), rsret_next(), lsb(),
+                                     rob_next(), robret(), rs(), rs_next(), rsret(), rsret_next(), lsb(),
                                      lsb_next(), lsbret(), lsbret_next() {
   }
 
@@ -23,25 +23,30 @@ public:
     for (cycle = 0; cycle < 1e10; cycle++) {
       transfer();
       fetch();
-      rob_next = rob.run(decoded_entry, rsret, lsbret, robret);
+      rob_next = rob.run(decoded_entry, rsret, lsbret, robret, memory);
       rs_next = rs.run(rsret_next, rob);
       lsb_next = lsb.run(memory, lsbret_next, rob);
       if (robret.pc_jump) {
         pc_next = robret.pc;
+        rob_next = ReorderBuffer();
+        rs_next = ReservationStation();
+        lsb_next = LoadStoreBuffer();
       } else {
         pc_next = pc + 4;
       }
-      if (robret_next.exit) {
-        std::cout << robret_next.exit_num << '\n';
+      if (robret.exit) {
+        std::cout << robret.exit_num << '\n';
         break;
       }
+      std::cerr << cycle << ' ' << pc << '\n';
     }
-    std::cout << '\n' << cycle;
+    std::cerr << cycle << '\n';
   }
 
 private:
   void transfer() {
     pc = pc_next;
+    rob = rob_next;
     decoded_entry = decoded_entry_next;
 
     rs = rs_next;
@@ -73,6 +78,11 @@ private:
     if (fetchIns == 0x0ff00513) {
       decoded_ins.opcode = EXIT;
       decoded_ins.opcode_type = EX;
+      decoded_ins.rd = 0;
+      decoded_ins.imm = 0;
+      decoded_ins.pc = 0;
+      decoded_ins.rs1 = 0;
+      decoded_ins.rs2 = 0;
       return decoded_ins;
     }
     uint32_t type = fetchIns & 0b1111111;
@@ -289,7 +299,6 @@ private:
   ReorderBuffer rob;
   ReorderBuffer rob_next;
   RoBReturn robret;
-  RoBReturn robret_next;
 
   ReservationStation rs;
   ReservationStation rs_next;
@@ -303,42 +312,3 @@ private:
 };
 
 #endif //SIMULATOR_H
-
-/*if (decoded_ins.opcode == LUI) {
-} else if (decoded_ins.opcode == AUIIPC) {
-} else if (decoded_ins.opcode == JAL) {
-} else if (decoded_ins.opcode == JALR) {
-} else if (decoded_ins.opcode == BEQ) {
-} else if (decoded_ins.opcode == BNE) {
-} else if (decoded_ins.opcode == BLT) {
-} else if (decoded_ins.opcode == BGE) {
-} else if (decoded_ins.opcode == BLTU) {
-} else if (decoded_ins.opcode == BGEU) {
-} else if (decoded_ins.opcode == LB) {
-} else if (decoded_ins.opcode == LH) {
-} else if (decoded_ins.opcode == LW) {
-} else if (decoded_ins.opcode == LBU) {
-} else if (decoded_ins.opcode == LHU) {
-} else if (decoded_ins.opcode == SB) {
-} else if (decoded_ins.opcode == SH) {
-} else if (decoded_ins.opcode == SW) {
-} else if (decoded_ins.opcode == ADDI) {
-} else if (decoded_ins.opcode == SLTI) {
-} else if (decoded_ins.opcode == SLTIU) {
-} else if (decoded_ins.opcode == XORI) {
-} else if (decoded_ins.opcode == ORI) {
-} else if (decoded_ins.opcode == ANDI) {
-} else if (decoded_ins.opcode == SLLI) {
-} else if (decoded_ins.opcode == SRLI) {
-} else if (decoded_ins.opcode == SRAI) {
-} else if (decoded_ins.opcode == ADD) {
-} else if (decoded_ins.opcode == SUB) {
-} else if (decoded_ins.opcode == SLL) {
-} else if (decoded_ins.opcode == SLT) {
-} else if (decoded_ins.opcode == SLTU) {
-} else if (decoded_ins.opcode == XOR) {
-} else if (decoded_ins.opcode == SRL) {
-} else if (decoded_ins.opcode == SRA) {
-} else if (decoded_ins.opcode == OR) {
-} else if (decoded_ins.opcode == AND) {
-}*/

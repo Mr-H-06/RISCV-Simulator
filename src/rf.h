@@ -4,7 +4,7 @@
 class RegisterFile {
 public:
   RegisterFile() {
-    for (uint32_t i = 0; i < 32; ++i) {
+    for (int i = 0; i < 32; ++i) {
       reg[i] = 0;
       rat[i] = -1;
     }

@@ -34,12 +34,15 @@ public:
     ret.add = false;
     ret.pop = false;
     if (!next.full()) {
-      for (uint32_t i = rob.head; i != rob.rear; i = (i + 1) % Num) {
-        if (rob.rob[i].instruction.opcode_type == I1 || rob.rob[i].instruction.opcode_type == R) {
+      for (int32_t i = rob.head; i != rob.rear; i = (i + 1) % Num) {
+        if (rob.rob[i].instruction.opcode_type == I1 || rob.rob[i].instruction.opcode_type == S) {
           if (rob.rob[i].prepared && rob.rob[i].state == RoBEntry::Issued) {
             next.push(i, rob.rob[i].instruction, rob);
             ret.add = true;
             ret.add_id = i;
+            break;
+          }
+          if (rob.rob[i].instruction.opcode_type == S) {
             break;
           }
         }
@@ -66,8 +69,8 @@ public:
                 memory.get(addr + 3) << 24));
           }
         } else {
-          uint32_t data =next.queue[working_idx].rs2val;
-          next.queue[working_idx].data = data;
+          uint32_t data = next.queue[working_idx].rs2val;
+          next.queue[working_idx].data = data;/*
           if (next.queue[working_idx].opcode == SB) {
             memory.write(next.queue[working_idx].addr, data & 0xFF);
           } else if (next.queue[working_idx].opcode == SH) {
@@ -78,12 +81,12 @@ public:
             memory.write(next.queue[working_idx].addr + 1, (data >> 8) & 0xFF);
             memory.write(next.queue[working_idx].addr + 2, (data >> 16) & 0xFF);
             memory.write(next.queue[working_idx].addr + 3, (data >> 24) & 0xFF);
-          }
+          }*/
         }
         ret.pop = true;
         ret.rob_id = next.queue[working_idx].rob_id;
-        ret.data = next.queue[working_idx].data;
-        ret.is_load = next.queue[working_idx].is_load;
+        //ret.data = next.queue[working_idx].data;
+        //ret.is_load = next.queue[working_idx].is_load;
         for (int32_t k = working_idx; k < size - 1; ++k) {
           next.queue[k] = next.queue[k + 1];
         }

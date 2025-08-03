@@ -38,7 +38,7 @@ public:
     rsret.add = false;
     rsret.pop = false;
     if (!next.full()) {
-      for (uint32_t i = rob.head; i != rob.rear; i = (i + 1) % Num) {
+      for (int32_t i = rob.head; i != rob.rear; i = (i + 1) % Num) {
         OpcodeType type = rob.rob[i].instruction.opcode_type;
         if (type == U || type == J || type == I2 || type == B || type == R) {
           if (rob.rob[i].prepared && rob.rob[i].state == RoBEntry::Issued) {
