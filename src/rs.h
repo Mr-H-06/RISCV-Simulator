@@ -32,8 +32,7 @@ public:
   }
 
   ReservationStation run(RSReturn &ret_last, RSReturn &ret, ReorderBuffer &rob) {
-    alu_in = alu_in_next;
-    //alu_in_idx = alu_in_next_idx;
+    ret = RSReturn();
     ReservationStation next = *this;
     ret.add = false;
     ret.pop = false;
@@ -60,9 +59,9 @@ public:
         next.queue[i] = next.queue[i + 1];
       }
       --next.size;
-      if (!next.empty()) {
-        alu_in_next = next.queue[0];
-      }
+    }
+    if (!next.empty()) {
+      next.alu_in = next.queue[0];
     }
     return next;
   }
@@ -80,8 +79,5 @@ public:
 
   ALU alu;
   RSEntry alu_in;
-  //uint32_t alu_in_idx;
-  RSEntry alu_in_next;
-  //uint32_t alu_in_next_idx;
 };
 #endif //RS_H

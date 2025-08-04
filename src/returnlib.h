@@ -34,7 +34,7 @@ public:
   uint8_t rs1;
   uint8_t rs2; // = shamt when opcode = slli, srli, srai
   uint8_t rd;
-  uint32_t imm;
+  int32_t imm;
   uint32_t pc;
 };
 
@@ -50,7 +50,7 @@ public:
   bool pc_jump;
   uint32_t pc;
   bool exit;
-  uint32_t exit_num;
+  int32_t exit_num;
 };
 
 class RoBEntry {
@@ -66,10 +66,12 @@ public:
   bool ready;
   DecodedIns instruction;
   State state;
-  uint32_t value;
+  int32_t value;
   uint32_t pc;
-  uint32_t rs1val;
-  uint32_t rs2val;
+  int32_t rs1val;
+  int32_t rs1rly;
+  int32_t rs2val;
+  int32_t rs2rly;
   bool jump;
   uint32_t jump_pc;
 };
@@ -83,7 +85,7 @@ public:
     pc_to = 0;
   }
 
-  uint32_t data;
+  int32_t data;
   bool branch;
   uint32_t pc_to;
 };
@@ -103,8 +105,8 @@ public:
   }
 
   Opcode opcode;
-  uint32_t vj;
-  uint32_t vk;
+  int32_t vj;
+  int32_t vk;
   //int32_t qj;
   //int32_t qk;
   uint32_t dest; //rob_id
@@ -138,7 +140,7 @@ public:
   bool pop;
   //bool is_load;
   int32_t rob_id;
-  uint32_t data;
+  int32_t data;
 
   bool add;
   int32_t add_id;

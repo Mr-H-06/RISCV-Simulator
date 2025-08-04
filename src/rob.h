@@ -30,13 +30,30 @@ public:
     rob[rear].jump_pc = 0;
     rob[rear].pc = decoded_ins.pc;
     if (!regDependencyCheck(decoded_ins.rs1, rear)) {
-      rob[rear].rs1val = rf.reg[decoded_ins.rs1];
+      if (rf.rat[decoded_ins.rs1] == -1) {
+        rob[rear].rs1val = rf.reg[decoded_ins.rs1];
+      } else {
+        rob[rear].rs1val = rob[rf.rat[decoded_ins.rs1]].value;
+      }
+      rob[rear].rs1rly = -1;
+    } else {
+      rob[rear].rs1rly = rf.rat[decoded_ins.rs1];
     }
     if (!regDependencyCheck(decoded_ins.rs2, rear)) {
-      rob[rear].rs2val = rf.reg[decoded_ins.rs2];
+      if (rf.rat[decoded_ins.rs2] == -1) {
+        rob[rear].rs2val = rf.reg[decoded_ins.rs2];
+      } else {
+        rob[rear].rs2val = rob[rf.rat[decoded_ins.rs2]].value;
+      }
+      rob[rear].rs2rly = -1;
+    } else {
+      rob[rear].rs2rly = rf.rat[decoded_ins.rs2];
     }
     if (decoded_ins.rd != 0) {
       rf.rat[decoded_ins.rd] = rear;
+    }
+    if (rob[rear].rs1rly == -1 && rob[rear].rs2rly == -1) {
+      rob[rear].prepared = true;
     }
     rear = (rear + 1) % Num;
     if (decoded_ins.opcode == EXIT) {
@@ -45,6 +62,7 @@ public:
   }
 
   ReorderBuffer run(DecodedIns ins, RSReturn &rsret, LSBReturn &lsbret, RoBReturn &ret, Memory &memory) {
+    ret = RoBReturn();
     rf.rat[0] = -1;
     rf.reg[0] = 0;
     ReorderBuffer next = *this;
@@ -71,14 +89,6 @@ public:
     }
 
     next.commit(next, ret, memory);
-    for (int32_t i = next.head; i != next.rear; i = (i + 1) % Num) {
-      if (!next.regDependencyCheck(next.rob[i].instruction.rs1, i) && !next.regDependencyCheck(
-            next.rob[i].instruction.rs2, i)) {
-        next.rob[i].prepared = true;
-      } else {
-        next.rob[i].prepared = false;
-      }
-    }
     return next;
   }
 
@@ -109,8 +119,9 @@ public:
           memory.get(addr) | (memory.get(addr + 1) << 8) | (memory.get(addr + 2) << 16) | (
             memory.get(addr + 3) << 24));
       }
-    } else */if (next.rob[head].instruction.opcode_type == S) {
-      uint32_t data = next.rob[next.head].rs2val;
+    } else */
+    if (next.rob[head].instruction.opcode_type == S) {
+      int32_t data = next.rob[next.head].rs2val;
       uint32_t addr = next.rob[next.head].rs1val + next.rob[next.head].instruction.imm;
       next.rob[next.head].value = data;
       if (next.rob[next.head].instruction.opcode == SB) {
@@ -127,8 +138,8 @@ public:
     }
     if (next.rob[next.head].instruction.rd != 0) {
       if (next.rf.rat[rob[next.head].instruction.rd] == head) {
-        rf.rat[next.rob[next.head].instruction.rd] = -1;
-        rf.reg[next.rob[next.head].instruction.rd] = next.rob[next.head].value;
+        next.rf.rat[next.rob[next.head].instruction.rd] = -1;
+        next.rf.reg[next.rob[next.head].instruction.rd] = next.rob[next.head].value;
       }
     }
     if (next.rob[next.head].jump) {
@@ -137,6 +148,21 @@ public:
       next.rear = (next.head + 1) % Num;
     } else {
       ret.pc_jump = false;
+    }
+    for (int32_t i = next.head; i != next.rear; i = (i + 1) % Num) {
+      if (next.rob[i].rs1rly == next.head) {
+        next.rob[i].rs1val = next.rob[next.head].value;
+        next.rob[i].rs1rly = -1;
+      }
+      if (next.rob[i].rs2rly == next.head) {
+        next.rob[i].rs2val = next.rob[next.head].value;
+        next.rob[i].rs2rly = -1;
+      }
+      if (next.rob[i].rs1rly == -1 && next.rob[i].rs2rly == -1) {
+        next.rob[i].prepared = true;
+      } else {
+        next.rob[i].prepared = false;
+      }
     }
     next.head = (next.head + 1) % Num;
   }
@@ -155,6 +181,9 @@ public:
   void clear() {
     head = 0;
     rear = 0;
+    for (int32_t i = 0; i < 32; ++i) {
+      rf.rat[i] = -1;
+    }
   }
 
   RoBEntry rob[Num];

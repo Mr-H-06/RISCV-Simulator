@@ -19,7 +19,7 @@ public:
   }
   */
 
-  uint32_t reg[32];
+  int32_t reg[32];
   int32_t rat[32];
 };
 #endif //RF_H

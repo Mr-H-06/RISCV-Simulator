@@ -14,8 +14,8 @@ public:
   }
 
   Simulator() : memory(), pc(0), pc_next(0), decoded_entry(), decoded_entry_next(), rob(),
-                                     rob_next(), robret(), rs(), rs_next(), rsret(), rsret_next(), lsb(),
-                                     lsb_next(), lsbret(), lsbret_next() {
+                rob_next(), robret(), rs(), rs_next(), rsret(), rsret_next(), lsb(),
+                lsb_next(), lsbret(), lsbret_next() {
   }
 
   void run() {
@@ -25,14 +25,20 @@ public:
       fetch();
       rob_next = rob.run(decoded_entry, rsret, lsbret, robret, memory);
       rs_next = rs.run(rsret, rsret_next, rob);
-      lsb_next = lsb.run(memory,lsbret, lsbret_next, rob);
+      lsb_next = lsb.run(memory, lsbret, lsbret_next, rob);
       if (robret.pc_jump) {
         pc_next = robret.pc;
         rob_next.clear();
         rs_next = ReservationStation();
         lsb_next = LoadStoreBuffer();
+        DecodedIns d = DecodedIns();
+        d.opcode = INVALID;
+        d.opcode_type = INV;
+        decoded_entry_next = d;
       } else {
-        pc_next = pc + 4;
+        if (decoded_entry_next.opcode != INVALID) {
+          pc_next = pc + 4;
+        }
       }
       if (robret.exit) {
         std::cout << robret.exit_num << '\n';
@@ -44,6 +50,10 @@ public:
   }
 
 private:
+  int32_t sign_extend(uint32_t value, int bits) {
+    return (int32_t) (value << (32 - bits)) >> (32 - bits);
+  }
+
   void transfer() {
     pc = pc_next;
     rob = rob_next;
@@ -111,18 +121,21 @@ private:
       decoded_ins.imm += ((fetchIns & 0b1111111111) << 1);
       fetchIns >>= 10;
       decoded_ins.imm += (fetchIns << 20);
+      decoded_ins.imm = sign_extend(decoded_ins.imm, 21);
     } else if (type == 0b1100111) {
+      //I_2 -- JALR
       decoded_ins.opcode_type = I2;
       decoded_ins.opcode = JALR;
       decoded_ins.rd = (fetchIns & 0b11111);
       fetchIns >>= 5;
-      if ((fetchIns & 111) != 0b000) {
+      if ((fetchIns & 0b111) != 0b000) {
         decoded_ins.opcode = INVALID;
       }
       fetchIns >>= 3;
       decoded_ins.rs1 = (fetchIns & 0b11111);
       fetchIns >>= 5;
       decoded_ins.imm = fetchIns;
+      decoded_ins.imm = sign_extend(decoded_ins.imm, 12);
     } else if (type == 0b1100011) {
       //B
       decoded_ins.opcode_type = B;
@@ -155,6 +168,7 @@ private:
       decoded_ins.imm += ((fetchIns & 0b111111) << 5);
       fetchIns >>= 6;
       decoded_ins.imm += ((fetchIns & 0b1) << 12);
+      decoded_ins.imm = sign_extend(decoded_ins.imm, 13);
     } else if (type == 0b0000011) {
       //I_1
       decoded_ins.opcode_type = I1;
@@ -178,6 +192,7 @@ private:
       decoded_ins.rs1 = (fetchIns & 0b11111);
       fetchIns >>= 5;
       decoded_ins.imm = fetchIns;
+      decoded_ins.imm = sign_extend(decoded_ins.imm, 12);
     } else if (type == 0b0100011) {
       //S
       decoded_ins.opcode_type = S;
@@ -199,6 +214,7 @@ private:
       decoded_ins.rs2 = (fetchIns & 0b11111);
       fetchIns >>= 5;
       decoded_ins.imm += (fetchIns << 5);
+      decoded_ins.imm = sign_extend(decoded_ins.imm, 12);
     } else if (type == 0b0010011) {
       //I_2
       decoded_ins.opcode_type = I2;
@@ -244,6 +260,7 @@ private:
         decoded_ins.opcode = INVALID;
       }
       decoded_ins.imm = fetchIns;
+      decoded_ins.imm = sign_extend(decoded_ins.imm, 12);
     } else if (type == 0b0110011) {
       //R
       decoded_ins.opcode_type = R;

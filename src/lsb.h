@@ -19,7 +19,7 @@ public:
     queue[size].rs1val = rob.rob[dest].rs1val;
     queue[size].rs2val = rob.rob[dest].rs2val;
     queue[size].imm = decoded_ins.imm;
-    queue[size].addr = decoded_ins.rs1 + decoded_ins.imm;
+    queue[size].addr = rob.rob[dest].rs1val + decoded_ins.imm;
     if (decoded_ins.opcode_type == I1) {
       queue[size].is_load = true;
     } else {
@@ -30,6 +30,7 @@ public:
   }
 
   LoadStoreBuffer run(Memory &memory, LSBReturn &ret_last, LSBReturn &ret, ReorderBuffer &rob) {
+    ret = LSBReturn();
     LoadStoreBuffer next = *this;
     ret.add = false;
     ret.pop = false;
@@ -51,7 +52,7 @@ public:
       }
     }
     if (empty()) return next;
-    if (working) {
+    if (next.working) {
       --next.queue[working_idx].time;
       if (next.queue[working_idx].time == 0) {
         uint32_t addr = next.queue[working_idx].addr;
@@ -72,7 +73,8 @@ public:
           }
         } else {
           uint32_t data = next.queue[working_idx].rs2val;
-          next.queue[working_idx].data = data; /*
+          next.queue[working_idx].data = data;
+          /*
           if (next.queue[working_idx].opcode == SB) {
             memory.write(next.queue[working_idx].addr, data & 0xFF);
           } else if (next.queue[working_idx].opcode == SH) {
@@ -92,23 +94,23 @@ public:
         for (int32_t k = working_idx; k < size - 1; ++k) {
           next.queue[k] = next.queue[k + 1];
         }
-        working = false;
-        --size;
+        next.working = false;
+        --next.size;
       }
     } else {
       //uint32_t id = next.queue[0].rob_id;
       if (next.queue[0].is_load) {
         //if (rob.regDependencyCheck(rob.rob[id].instruction.rd, id) && rob.regDependencyCheck(next.queue[0].rs1, id)) {
-        working_idx = 0;
-        working = true;
-        next.queue[0].addr = next.queue[0].rs1val + next.queue[0].imm;
+        next.working_idx = 0;
+        next.working = true;
+        //next.queue[0].addr = next.queue[0].rs1val + next.queue[0].imm;
         --next.queue[0].time;
         //}
       } else {
         //if (rob.regDependencyCheck(next.queue[0].rs1, id) && rob.regDependencyCheck(next.queue[0].rs2, id)) {
-        working_idx = 0;
-        working = true;
-        next.queue[0].addr = next.queue[0].rs1val + next.queue[0].imm;
+        next.working_idx = 0;
+        next.working = true;
+        //next.queue[0].addr = next.queue[0].rs1val + next.queue[0].imm;
         --next.queue[0].time;
         //}
       }
