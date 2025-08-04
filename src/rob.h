@@ -11,10 +11,10 @@ public:
   }
 
   bool regDependencyCheck(int32_t reg_idx, int32_t dest) {
-    if (rf.rat[reg_idx] != -1 || !rob[rf.rat[reg_idx]].ready || rf.rat[reg_idx] != dest) {
-      return true;
+    if (rf.rat[reg_idx] == -1 || rob[rf.rat[reg_idx]].ready || rf.rat[reg_idx] == dest) {
+      return false;
     }
-    return false;
+    return true;
   }
 
   void push(DecodedIns &decoded_ins) {
@@ -141,8 +141,8 @@ public:
     next.head = (next.head + 1) % Num;
   }
 
-  bool full() {
-    return (rear + 1) % Num == head;
+  bool willfull() {
+    return (rear + 2) % Num == head || (rear + 1) % Num == head;
   }
 
   uint32_t getreg(uint32_t reg_idx) {
@@ -150,6 +150,11 @@ public:
       return rob[rf.rat[reg_idx]].value;
     }
     return rf.reg[reg_idx];
+  }
+
+  void clear() {
+    head = 0;
+    rear = 0;
   }
 
   RoBEntry rob[Num];

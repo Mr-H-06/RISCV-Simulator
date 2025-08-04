@@ -29,7 +29,7 @@ public:
     ++size;
   }
 
-  LoadStoreBuffer run(Memory &memory, LSBReturn &ret, ReorderBuffer &rob) {
+  LoadStoreBuffer run(Memory &memory, LSBReturn &ret_last, LSBReturn &ret, ReorderBuffer &rob) {
     LoadStoreBuffer next = *this;
     ret.add = false;
     ret.pop = false;
@@ -37,10 +37,12 @@ public:
       for (int32_t i = rob.head; i != rob.rear; i = (i + 1) % Num) {
         if (rob.rob[i].instruction.opcode_type == I1 || rob.rob[i].instruction.opcode_type == S) {
           if (rob.rob[i].prepared && rob.rob[i].state == RoBEntry::Issued) {
-            next.push(i, rob.rob[i].instruction, rob);
-            ret.add = true;
-            ret.add_id = i;
-            break;
+            if (!(ret_last.add && ret_last.add_id == i)){
+              next.push(i, rob.rob[i].instruction, rob);
+              ret.add = true;
+              ret.add_id = i;
+              break;
+            }
           }
           if (rob.rob[i].instruction.opcode_type == S) {
             break;
@@ -70,7 +72,7 @@ public:
           }
         } else {
           uint32_t data = next.queue[working_idx].rs2val;
-          next.queue[working_idx].data = data;/*
+          next.queue[working_idx].data = data; /*
           if (next.queue[working_idx].opcode == SB) {
             memory.write(next.queue[working_idx].addr, data & 0xFF);
           } else if (next.queue[working_idx].opcode == SH) {

@@ -31,37 +31,38 @@ public:
     ++size;
   }
 
-  ReservationStation run(RSReturn &rsret, ReorderBuffer &rob) {
+  ReservationStation run(RSReturn &ret_last, RSReturn &ret, ReorderBuffer &rob) {
     alu_in = alu_in_next;
     //alu_in_idx = alu_in_next_idx;
     ReservationStation next = *this;
-    rsret.add = false;
-    rsret.pop = false;
+    ret.add = false;
+    ret.pop = false;
     if (!next.full()) {
       for (int32_t i = rob.head; i != rob.rear; i = (i + 1) % Num) {
         OpcodeType type = rob.rob[i].instruction.opcode_type;
         if (type == U || type == J || type == I2 || type == B || type == R) {
           if (rob.rob[i].prepared && rob.rob[i].state == RoBEntry::Issued) {
+            if (ret_last.add && ret_last.add_id == i) continue;
             next.push(i, rob.rob[i].instruction, rob);
-            rsret.add = true;
-            rsret.add_id = i;
+            ret.add = true;
+            ret.add_id = i;
             break;
           }
         }
       }
     }
-    if (!next.empty()) {
-      alu_in_next = next.queue[0];
-    }
     // alu working
     if (!empty()) {
-      rsret.pop = true;
-      rsret.rob_id = alu_in.dest;
-      rsret.aluret = alu.run(alu_in);
-      for (int32_t i = 0; i < size - 1; ++i) {
+      ret.pop = true;
+      ret.rob_id = alu_in.dest;
+      ret.aluret = alu.run(alu_in);
+      for (int32_t i = 0; i < next.size - 1; ++i) {
         next.queue[i] = next.queue[i + 1];
       }
-      --size;
+      --next.size;
+      if (!next.empty()) {
+        alu_in_next = next.queue[0];
+      }
     }
     return next;
   }
