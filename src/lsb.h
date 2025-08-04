@@ -89,7 +89,7 @@ public:
         }
         ret.pop = true;
         ret.rob_id = next.queue[working_idx].rob_id;
-        //ret.data = next.queue[working_idx].data;
+        ret.data = next.queue[working_idx].data;
         //ret.is_load = next.queue[working_idx].is_load;
         for (int32_t k = working_idx; k < size - 1; ++k) {
           next.queue[k] = next.queue[k + 1];

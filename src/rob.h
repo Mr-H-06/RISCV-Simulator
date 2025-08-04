@@ -55,10 +55,10 @@ public:
     if (rob[rear].rs1rly == -1 && rob[rear].rs2rly == -1) {
       rob[rear].prepared = true;
     }
-    rear = (rear + 1) % Num;
     if (decoded_ins.opcode == EXIT) {
       rob[rear].state = RoBEntry::Writeback;
     }
+    rear = (rear + 1) % Num;
   }
 
   ReorderBuffer run(DecodedIns ins, RSReturn &rsret, LSBReturn &lsbret, RoBReturn &ret, Memory &memory) {

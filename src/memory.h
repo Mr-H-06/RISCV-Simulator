@@ -64,7 +64,7 @@ public:
     }
   }
 
-  uint32_t get(uint32_t location) {
+  uint8_t get(uint32_t location) {
     return mem[location];
   }
 
