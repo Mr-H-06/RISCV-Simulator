@@ -49,9 +49,9 @@ public:
       } else if (opcode == BGE) {
         ret.branch = ((int32_t) entry.vj >= (int32_t) entry.vk);
       } else if (opcode == BLTU) {
-        ret.branch = (entry.vj < entry.vk);
+        ret.branch = ((uint32_t)entry.vj < (uint32_t)entry.vk);
       } else if (opcode == BGEU) {
-        ret.branch = (entry.vj >= entry.vk);
+        ret.branch = ((uint32_t)entry.vj >= (uint32_t)entry.vk);
       }
       if (ret.branch) {
         ret.pc_to = entry.pc + entry.A;

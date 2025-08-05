@@ -164,8 +164,8 @@ public:
         next.rob[i].prepared = false;
       }
     }
-    /*std::cerr << next.rob[next.head].instruction.pc << '\n';
-    for (int i = 0; i < 32; ++i) {
+    std::cerr << next.rob[next.head].instruction.pc << '\n';
+    /*for (int i = 0; i < 32; ++i) {
       std::cerr << "[x" << i << " = " << next.rf.reg[i] << "]\n";
     }*/
     next.head = (next.head + 1) % Num;
