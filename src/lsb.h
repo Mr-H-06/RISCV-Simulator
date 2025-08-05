@@ -29,7 +29,7 @@ public:
     ++size;
   }
 
-  LoadStoreBuffer run(Memory &memory, LSBReturn &ret_last, LSBReturn &ret, ReorderBuffer &rob) {
+  LoadStoreBuffer run(Memory &memory, LSBReturn &ret, ReorderBuffer &rob) {
     ret = LSBReturn();
     LoadStoreBuffer next = *this;
     ret.add = false;
@@ -98,7 +98,7 @@ public:
         ret.rob_id = next.queue[working_idx].rob_id;
         ret.data = next.queue[working_idx].data;
         //ret.is_load = next.queue[working_idx].is_load;
-        for (int32_t k = working_idx; k < size - 1; ++k) {
+        for (int32_t k = working_idx; k < next.size - 1; ++k) {
           next.queue[k] = next.queue[k + 1];
         }
         next.working = false;

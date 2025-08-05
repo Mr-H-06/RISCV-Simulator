@@ -25,7 +25,7 @@ public:
       fetch();
       rob_next = rob.run(decoded_entry, rsret, lsbret, robret, memory);
       rs_next = rs.run(rsret, rsret_next, rob);
-      lsb_next = lsb.run(memory, lsbret, lsbret_next, rob);
+      lsb_next = lsb.run(memory, lsbret_next, rob);
       if (robret.pc_jump) {
         pc_next = robret.pc;
         rob_next.clear();
