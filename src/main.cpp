@@ -1,7 +1,7 @@
 #include "simulator.h"
 
 int main() {
-  //std::string filename = "../testcases/statement_test.data";
+  //std::string filename = "../testcases/expr.data";
   //Simulator simulator(filename);
   Simulator simulator = Simulator();
   simulator.run();

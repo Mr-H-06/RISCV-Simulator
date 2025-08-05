@@ -38,7 +38,14 @@ public:
       for (int32_t i = rob.head; i != rob.rear; i = (i + 1) % Num) {
         if (rob.rob[i].instruction.opcode_type == I1 || rob.rob[i].instruction.opcode_type == S) {
           if (rob.rob[i].prepared && rob.rob[i].state == RoBEntry::Issued) {
-            if (!(ret_last.add && ret_last.add_id == i)){
+            bool add = true;
+            for (int32_t j = 0; j < size; ++j) {
+              if (queue[j].rob_id == i) {
+                add = false;
+                break;
+              }
+            }
+            if (add) {
               next.push(i, rob.rob[i].instruction, rob);
               ret.add = true;
               ret.add_id = i;
