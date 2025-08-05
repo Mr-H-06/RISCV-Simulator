@@ -2,6 +2,7 @@
 #define SIMULATOR_H
 #include "returnlib.h"
 #include "memory.h"
+#include "predictor.h"
 #include "rs.h"
 #include "rob.h"
 #include "lsb.h"
@@ -37,7 +38,7 @@ public:
         decoded_entry_next = d;
       } else {
         if (decoded_entry_next.opcode != INVALID) {
-          pc_next = pc + 4;
+          pc_next = predictor(pc, decoded_entry);
         }
       }
       if (robret.exit) {
