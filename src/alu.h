@@ -20,7 +20,7 @@ public:
     } else if (opcode == SLL || opcode == SLLI) {
       ret.data = entry.vj << (entry.vk & 0x1F);
     } else if (opcode == SRL || opcode == SRLI) {
-      ret.data = entry.vj >> (entry.vk & 0x1F);
+      ret.data = (uint32_t)entry.vj >> (entry.vk & 0x1F);
     } else if (opcode == SRA || opcode == SRAI) {
       ret.data = (int32_t) entry.vj >> (entry.vk & 0x1F);
     } else if (opcode == SLT || opcode == SLTI) {

@@ -238,7 +238,6 @@ private:
         decoded_ins.opcode = ANDI;
       } else if (type == 0b001) {
         decoded_ins.imm = (fetchIns & 0b11111);
-        decoded_ins.imm = sign_extend(decoded_ins.imm, 5);
         fetchIns >>= 5;
         if (fetchIns == 0b0000000) {
           decoded_ins.opcode = SLLI;
@@ -248,7 +247,6 @@ private:
         return decoded_ins;
       } else if (type == 0b101) {
         decoded_ins.imm = (fetchIns & 0b11111);
-        decoded_ins.imm = sign_extend(decoded_ins.imm, 5);
         fetchIns >>= 5;
         if (fetchIns == 0b0000000) {
           decoded_ins.opcode = SRLI;
