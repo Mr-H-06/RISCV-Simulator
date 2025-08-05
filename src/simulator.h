@@ -20,7 +20,7 @@ public:
 
   void run() {
     uint32_t cycle;
-    for (cycle = 0; cycle < 1e10; cycle++) {
+    for (cycle = 0; cycle < 2e10; cycle++) {
       transfer();
       fetch();
       rob_next = rob.run(decoded_entry, rsret, lsbret, robret, memory);
@@ -44,9 +44,9 @@ public:
         std::cout << robret.exit_num << '\n';
         break;
       }
-      std::cerr << cycle << ' ' << pc << '\n';
+      //std::cerr << cycle << ' ' << pc << '\n';
     }
-    std::cerr << cycle << '\n';
+    //std::cerr << cycle << '\n';
   }
 
 private:
@@ -237,7 +237,8 @@ private:
       } else if (type == 0b111) {
         decoded_ins.opcode = ANDI;
       } else if (type == 0b001) {
-        decoded_ins.rs2 = (fetchIns & 0b11111);
+        decoded_ins.imm = (fetchIns & 0b11111);
+        decoded_ins.imm = sign_extend(decoded_ins.imm, 5);
         fetchIns >>= 5;
         if (fetchIns == 0b0000000) {
           decoded_ins.opcode = SLLI;
@@ -246,7 +247,8 @@ private:
         }
         return decoded_ins;
       } else if (type == 0b101) {
-        decoded_ins.rs2 = (fetchIns & 0b11111);
+        decoded_ins.imm = (fetchIns & 0b11111);
+        decoded_ins.imm = sign_extend(decoded_ins.imm, 5);
         fetchIns >>= 5;
         if (fetchIns == 0b0000000) {
           decoded_ins.opcode = SRLI;

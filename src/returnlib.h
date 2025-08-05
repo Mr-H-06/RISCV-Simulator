@@ -32,9 +32,9 @@ public:
   Opcode opcode;
   OpcodeType opcode_type;
   uint8_t rs1;
-  uint8_t rs2; // = shamt when opcode = slli, srli, srai
+  uint8_t rs2;
   uint8_t rd;
-  int32_t imm;
+  int32_t imm; // = shamt when opcode = slli, srli, srai
   uint32_t pc;
 };
 

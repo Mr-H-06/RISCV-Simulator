@@ -139,8 +139,8 @@ public:
     if (next.rob[next.head].instruction.rd != 0) {
       if (next.rf.rat[rob[next.head].instruction.rd] == head) {
         next.rf.rat[next.rob[next.head].instruction.rd] = -1;
-        next.rf.reg[next.rob[next.head].instruction.rd] = next.rob[next.head].value;
       }
+      next.rf.reg[next.rob[next.head].instruction.rd] = next.rob[next.head].value;
     }
     if (next.rob[next.head].jump) {
       ret.pc_jump = true;
@@ -164,6 +164,10 @@ public:
         next.rob[i].prepared = false;
       }
     }
+    /*std::cerr << next.rob[next.head].instruction.pc << '\n';
+    for (int i = 0; i < 32; ++i) {
+      std::cerr << "[x" << i << " = " << next.rf.reg[i] << "]\n";
+    }*/
     next.head = (next.head + 1) % Num;
   }
 
