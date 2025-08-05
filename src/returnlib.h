@@ -1,7 +1,7 @@
 #ifndef RETURNLIB_H
 #define RETURNLIB_H
 #include <cstdint>
-constexpr int32_t Num = 5;
+constexpr int32_t Num = 32;
 
 //  fetch
 enum Opcode : uint8_t {
